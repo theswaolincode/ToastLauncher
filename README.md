@@ -1,5 +1,5 @@
 # Toast Launcher
-> This package will delight you with freshly baked toasts 🍞
+> 📦 Introducing [Toast Launcher] - an incredible addition to Swift projects that brings freshly baked toasts right to your app! 🍞✨
 
 ## Table of Contents
 * [General Info](#general-information)
