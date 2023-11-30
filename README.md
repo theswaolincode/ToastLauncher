@@ -41,6 +41,7 @@ install this package in XCode as you would normally do using this URL -> https:/
 
 ## Usage
 As easy as implementing a modifier as you would normally do when presenting sheet, fullScreenCover, ect..
+You might also check the example project https://github.com/imediayala/SwiftUI-Catalogue
 
     .toastView(isPresented: $isPresentingView,
                    alignment: viewAlignment,
