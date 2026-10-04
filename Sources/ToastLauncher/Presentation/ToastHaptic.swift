@@ -9,9 +9,17 @@ import SwiftUI
 import UIKit
 
 /// Haptic feedback played when a toast appears.
+///
+/// Pass one to the `haptic` parameter of
+/// ``SwiftUI/View/toast(isPresented:alignment:duration:dragToDismiss:haptic:transition:animation:onDismiss:content:)``
+/// or ``SwiftUI/View/toastQueue(_:alignment:dragToDismiss:haptic:transition:animation:)``.
+/// Haptics play on iPhone only; the Simulator doesn't play them.
 public enum ToastHaptic: Sendable {
+    /// Indicates that a task completed successfully.
     case success
+    /// Indicates that a task produced a warning.
     case warning
+    /// Indicates that a task failed.
     case error
 
     @available(iOS 17.0, *)

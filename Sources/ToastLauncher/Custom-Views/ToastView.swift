@@ -7,6 +7,17 @@
 
 import SwiftUI
 
+/// A ready-made toast with an icon, a message, and an optional dismiss button.
+///
+/// Present it with ``SwiftUI/View/toast(isPresented:alignment:duration:dragToDismiss:haptic:transition:animation:onDismiss:content:)``
+/// or use it as a starting point for your own design. It scales with Dynamic Type and
+/// announces its title to VoiceOver when it appears.
+///
+/// ```swift
+/// ToastView(title: "Saved", symbolName: "checkmark.circle.fill", background: .glass, style: .auto) {
+///     isSaved = false
+/// }
+/// ```
 @MainActor
 public struct ToastView: View {
     var title: String
@@ -16,7 +27,15 @@ public struct ToastView: View {
     var style: ToastViewStyle
     var onDismiss: @MainActor () -> Void
 
-    /// - Parameter background: Defaults to ``ToastBackgroundStyle/solid``, the original look.
+    /// Creates a toast view.
+    ///
+    /// - Parameters:
+    ///   - title: The message to show and announce to VoiceOver.
+    ///   - symbolName: The SF Symbol shown above the message.
+    ///   - buttonTitle: The dismiss button's title, shown for ``ToastViewStyle/prominent``.
+    ///   - background: Defaults to ``ToastBackgroundStyle/solid``, the original look.
+    ///   - style: Whether the toast dismisses itself or shows a dismiss button.
+    ///   - onDismiss: Called when the toast asks to be dismissed. Set your presentation binding to `false` here.
    public init(title: String? = nil, symbolName: String? = nil, buttonTitle: String? = nil, background: ToastBackgroundStyle = .solid, style: ToastViewStyle, onDismiss: @escaping @MainActor () -> Void) {
         self.title = title ?? "Hello, world!!"
         self.symbolName = symbolName ?? "globe"
@@ -79,8 +98,11 @@ public struct ToastView: View {
         }
     }
     
+    /// How a ``ToastView`` is dismissed.
    public enum ToastViewStyle: Sendable {
+        /// Calls `onDismiss` after 2 seconds (at least 10 while VoiceOver is running).
         case auto
+        /// Shows a button that calls `onDismiss`.
         case prominent
     }
 }

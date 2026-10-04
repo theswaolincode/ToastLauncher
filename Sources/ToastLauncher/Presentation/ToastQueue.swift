@@ -39,6 +39,7 @@ public final class ToastQueue: ObservableObject {
     private let gap: TimeInterval
     private let sleep: ToastAutoDismiss.Sleep
 
+    /// Creates an empty queue.
     public convenience init() {
         // Roughly the length of the default removal animation, so toasts never overlap.
         self.init(gap: 0.35, sleep: ToastAutoDismiss.systemSleep)
