@@ -37,7 +37,8 @@ public struct ToastView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        // Adapts to light/dark mode: white in light, elevated gray in dark.
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
     }
