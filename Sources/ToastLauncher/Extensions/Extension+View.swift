@@ -11,7 +11,7 @@ extension View {
     /// Presents `content` as an overlay while `isPresented` is `true`.
     ///
     /// The original API, kept fully backward compatible: it never auto-dismisses and
-    /// animates using the caller's `withAnimation`. Prefer ``toast(isPresented:alignment:duration:transition:animation:onDismiss:content:)``
+    /// animates using the caller's `withAnimation`. Prefer ``toast(isPresented:alignment:duration:dragToDismiss:transition:animation:onDismiss:content:)``
     /// for new code.
     public func toastView<Content>(isPresented: Binding<Bool>, alignment: Alignment, animationStart: AnyTransition, animationEnd: AnyTransition, onDismiss: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) -> some View where Content : View {
         modifier(ToastModifier(
@@ -21,6 +21,7 @@ extension View {
             animation: nil,
             duration: nil,
             onDismiss: onDismiss,
+            isDragToDismissEnabled: false,
             toastContent: content))
     }
 
@@ -30,6 +31,8 @@ extension View {
     ///   - isPresented: Binding that controls visibility. The toast sets it back to `false` when it dismisses itself.
     ///   - alignment: Where the toast appears. Defaults to `.top`.
     ///   - duration: Seconds before auto-dismissing, or `nil` to stay until dismissed. Defaults to 3.
+    ///     The timer pauses while the toast is being dragged.
+    ///   - dragToDismiss: Whether swiping toward the toast's edge dismisses it. Centered toasts can't be dragged.
     ///   - transition: Insertion/removal transition. Defaults to sliding from the toast's edge.
     ///   - animation: Animation used to show and hide the toast.
     ///   - onDismiss: Called after the toast is dismissed, however that happened.
@@ -38,6 +41,7 @@ extension View {
         isPresented: Binding<Bool>,
         alignment: Alignment = .top,
         duration: TimeInterval? = 3,
+        dragToDismiss: Bool = true,
         transition: AnyTransition? = nil,
         animation: Animation = .spring(response: 0.4, dampingFraction: 0.8),
         onDismiss: (() -> Void)? = nil,
@@ -50,6 +54,7 @@ extension View {
             animation: animation,
             duration: duration,
             onDismiss: onDismiss,
+            isDragToDismissEnabled: dragToDismiss,
             toastContent: content))
     }
 }

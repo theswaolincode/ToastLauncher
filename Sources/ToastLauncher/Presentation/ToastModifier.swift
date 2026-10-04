@@ -18,7 +18,15 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
     let duration: TimeInterval?
     /// Plain closure like `.sheet(onDismiss:)`: it's created and called on the main actor anyway.
     let onDismiss: (() -> Void)?
+    let isDragToDismissEnabled: Bool
     let toastContent: () -> ToastContent
+
+    /// `@GestureState` (not `@State`) so it resets even if the system cancels the gesture,
+    /// and the reset transaction gives us the spring-back for free.
+    @GestureState(resetTransaction: Transaction(animation: .spring(response: 0.3, dampingFraction: 0.7)))
+    private var dragTranslation: CGSize = .zero
+
+    private var edge: Edge? { ToastLayout.edge(for: alignment) }
 
     func body(content: Content) -> some View {
         content
@@ -27,15 +35,19 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
                 ZStack {
                     if isPresented {
                         toastContent()
+                            .offset(ToastDrag.offset(for: dragTranslation, toward: edge))
+                            // `.subviews` disables only this gesture; the content's own gestures keep working.
+                            .gesture(dragGesture, including: isDragToDismissEnabled ? .all : .subviews)
                             .transition(transition)
                     }
                 }
                 .animation(ifPresent: animation, value: isPresented)
             }
-            // Restarts whenever `isPresented` flips, and SwiftUI cancels the previous run,
-            // so an early dismissal (or re-presentation) never leaves a stale timer behind.
-            .task(id: isPresented) {
-                guard isPresented else { return }
+            // Restarts whenever the key changes, and SwiftUI cancels the previous run, so an
+            // early dismissal never leaves a stale timer behind. Including `isDragging` pauses
+            // the timer while the toast is held and restarts it after a spring-back.
+            .task(id: AutoDismissKey(isPresented: isPresented, isDragging: dragTranslation != .zero)) {
+                guard isPresented, dragTranslation == .zero else { return }
                 if await ToastAutoDismiss.wait(for: duration) {
                     dismiss()
                 }
@@ -46,11 +58,28 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
             }
     }
 
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .updating($dragTranslation) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                if ToastDrag.shouldDismiss(predictedEndTranslation: value.predictedEndTranslation, toward: edge) {
+                    dismiss()
+                }
+            }
+    }
+
     private func dismiss() {
         withAnimation(animation ?? .default) {
             isPresented = false
         }
     }
+}
+
+private struct AutoDismissKey: Equatable {
+    let isPresented: Bool
+    let isDragging: Bool
 }
 
 private extension View {
