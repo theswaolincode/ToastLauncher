@@ -27,5 +27,6 @@ let package = Package(
         .testTarget(
             name: "ToastLauncherTests",
             dependencies: ["ToastLauncher"]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

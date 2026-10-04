@@ -7,14 +7,15 @@
 
 import SwiftUI
 
+@MainActor
 public struct ToastView: View {
     var title: String
     var symbolName: String
     var buttonTitle: String
     var style: ToastViewStyle
-    var onDismiss:()-> Void
+    var onDismiss: @MainActor () -> Void
     
-   public init(title: String? = nil, symbolName: String? = nil, buttonTitle: String? = nil, style: ToastViewStyle, onDismiss: @escaping () -> Void) {
+   public init(title: String? = nil, symbolName: String? = nil, buttonTitle: String? = nil, style: ToastViewStyle, onDismiss: @escaping @MainActor () -> Void) {
         self.title = title ?? "Hello, world!!"
         self.symbolName = symbolName ?? "globe"
         self.buttonTitle = buttonTitle ?? "Dismiss Me"
@@ -44,8 +45,14 @@ public struct ToastView: View {
     }
     
     private func autoDismiss() async {
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
         guard style == .auto else { return }
+        do {
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+        } catch {
+            // `.task` cancels us when the view disappears (e.g. dismissed early).
+            // Calling `onDismiss` here would fire a second, stale dismissal.
+            return
+        }
         onDismiss()
     }
     
@@ -56,7 +63,7 @@ public struct ToastView: View {
         }
     }
     
-   public enum ToastViewStyle {
+   public enum ToastViewStyle: Sendable {
         case auto
         case prominent
     }
