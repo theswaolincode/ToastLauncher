@@ -13,6 +13,7 @@ struct ToastQueueModifier: ViewModifier {
     @ObservedObject var queue: ToastQueue
     let alignment: Alignment
     let isDragToDismissEnabled: Bool
+    let haptic: ToastHaptic?
     let transition: AnyTransition
     let animation: Animation
 
@@ -28,6 +29,7 @@ struct ToastQueueModifier: ViewModifier {
             duration: queue.current?.duration,
             onDismiss: nil,
             isDragToDismissEnabled: isDragToDismissEnabled,
+            haptic: haptic,
             toastContent: { queue.current?.content }
         ))
     }

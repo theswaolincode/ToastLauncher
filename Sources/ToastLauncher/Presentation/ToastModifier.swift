@@ -19,6 +19,7 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
     /// Plain closure like `.sheet(onDismiss:)`: it's created and called on the main actor anyway.
     let onDismiss: (() -> Void)?
     let isDragToDismissEnabled: Bool
+    let haptic: ToastHaptic?
     let toastContent: () -> ToastContent
 
     /// `@GestureState` (not `@State`) so it resets even if the system cancels the gesture,
@@ -56,6 +57,7 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
             .onChange(of: isPresented) { presented in
                 if !presented { onDismiss?() }
             }
+            .modifier(ToastHapticModifier(haptic: haptic, isPresented: isPresented))
     }
 
     private var dragGesture: some Gesture {
