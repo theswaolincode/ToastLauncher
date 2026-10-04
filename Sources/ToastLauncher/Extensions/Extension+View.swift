@@ -57,4 +57,27 @@ extension View {
             isDragToDismissEnabled: dragToDismiss,
             toastContent: content))
     }
+
+    /// Presents the toasts added to `queue` one after another.
+    ///
+    /// - Parameters:
+    ///   - queue: The queue to present. Add toasts with ``ToastQueue/enqueue(duration:content:)``.
+    ///   - alignment: Where toasts appear. Defaults to `.top`.
+    ///   - dragToDismiss: Whether swiping toward the toast's edge dismisses it.
+    ///   - transition: Insertion/removal transition. Defaults to sliding from the toast's edge.
+    ///   - animation: Animation used to show and hide each toast.
+    public func toastQueue(
+        _ queue: ToastQueue,
+        alignment: Alignment = .top,
+        dragToDismiss: Bool = true,
+        transition: AnyTransition? = nil,
+        animation: Animation = .spring(response: 0.4, dampingFraction: 0.8)
+    ) -> some View {
+        modifier(ToastQueueModifier(
+            queue: queue,
+            alignment: alignment,
+            isDragToDismissEnabled: dragToDismiss,
+            transition: transition ?? ToastLayout.defaultTransition(for: alignment),
+            animation: animation))
+    }
 }
