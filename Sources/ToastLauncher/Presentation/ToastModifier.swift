@@ -27,7 +27,13 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
     @GestureState(resetTransaction: Transaction(animation: .spring(response: 0.3, dampingFraction: 0.7)))
     private var dragTranslation: CGSize = .zero
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+
     private var edge: Edge? { ToastLayout.edge(for: alignment) }
+
+    /// With Reduce Motion on, every toast fades instead of sliding or scaling.
+    private var effectiveTransition: AnyTransition { reduceMotion ? .opacity : transition }
 
     func body(content: Content) -> some View {
         content
@@ -36,10 +42,15 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
                 ZStack {
                     if isPresented {
                         toastContent()
+                            // One container, so VoiceOver treats the toast as a group
+                            // while its buttons stay individually reachable.
+                            .accessibilityElement(children: .contain)
+                            // VoiceOver's two-finger "scrub" (Z) gesture dismisses the toast.
+                            .accessibilityAction(.escape) { dismiss() }
                             .offset(ToastDrag.offset(for: dragTranslation, toward: edge))
                             // `.subviews` disables only this gesture; the content's own gestures keep working.
                             .gesture(dragGesture, including: isDragToDismissEnabled ? .all : .subviews)
-                            .transition(transition)
+                            .transition(effectiveTransition)
                     }
                 }
                 .animation(ifPresent: animation, value: isPresented)
@@ -49,6 +60,7 @@ struct ToastModifier<ToastContent: View>: ViewModifier {
             // the timer while the toast is held and restarts it after a spring-back.
             .task(id: AutoDismissKey(isPresented: isPresented, isDragging: dragTranslation != .zero)) {
                 guard isPresented, dragTranslation == .zero else { return }
+                let duration = ToastAutoDismiss.effectiveDuration(duration, voiceOverEnabled: voiceOverEnabled)
                 if await ToastAutoDismiss.wait(for: duration) {
                     dismiss()
                 }

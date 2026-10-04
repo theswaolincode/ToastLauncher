@@ -23,37 +23,46 @@ public struct ToastView: View {
         self.onDismiss = onDismiss
     }
 
+    // Spacing and padding grow with the user's text size so large text doesn't feel cramped.
+    @ScaledMetric(relativeTo: .body) private var spacing: CGFloat = 8
+    @ScaledMetric(relativeTo: .body) private var contentPadding: CGFloat = 16
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+
     public var body: some View {
-        VStack {
+        VStack(spacing: spacing) {
             Image(systemName: symbolName)
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
+                // A text style (not a fixed size) so the symbol scales with Dynamic Type.
+                .font(.title2)
+                .foregroundStyle(Color.accentColor)
+                // Decorative: the title already says what happened.
+                .accessibilityHidden(true)
             Text(title)
                 .font(.body)
+                .multilineTextAlignment(.center)
+                // Wrap onto more lines at large sizes instead of truncating.
+                .fixedSize(horizontal: false, vertical: true)
             buildActionButton()
         }
-        
+        .toastAnnouncement(title)
         .task {
             await autoDismiss()
         }
-        .padding()
+        .padding(contentPadding)
         .frame(maxWidth: .infinity)
         // Adapts to light/dark mode: white in light, elevated gray in dark.
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
     }
-    
+
     private func autoDismiss() async {
         guard style == .auto else { return }
-        do {
-            try await Task.sleep(nanoseconds: 2_000_000_000)
-        } catch {
-            // `.task` cancels us when the view disappears (e.g. dismissed early).
-            // Calling `onDismiss` here would fire a second, stale dismissal.
-            return
+        let duration = ToastAutoDismiss.effectiveDuration(2, voiceOverEnabled: voiceOverEnabled)
+        // `wait` returns `false` if `.task` was cancelled because the view disappeared
+        // (e.g. dismissed early), so we never fire a second, stale dismissal.
+        if await ToastAutoDismiss.wait(for: duration) {
+            onDismiss()
         }
-        onDismiss()
     }
     
     @ViewBuilder func buildActionButton() -> some View {
@@ -73,6 +82,10 @@ struct ToastView_Previews: PreviewProvider {
     static var previews: some View {
         ToastView(style: .prominent, onDismiss: {})
             .previewLayout(.sizeThatFits)
+        ToastView(title: "Your changes were saved and synced to all your devices", style: .prominent, onDismiss: {})
+            .environment(\.dynamicTypeSize, .accessibility3)
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("Accessibility text size")
     }
 }
 

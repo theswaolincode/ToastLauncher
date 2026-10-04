@@ -16,6 +16,17 @@ enum ToastAutoDismiss {
 
     static let systemSleep: Sleep = { try await Task.sleep(nanoseconds: $0) }
 
+    /// The shortest auto-dismiss duration while VoiceOver is running.
+    static let voiceOverMinimumDuration: TimeInterval = 10
+
+    /// Extends short durations while VoiceOver is running, so there's time to hear the
+    /// announcement and swipe to the toast (or its buttons) before it disappears.
+    /// `nil` (stay until dismissed) is left untouched.
+    static func effectiveDuration(_ duration: TimeInterval?, voiceOverEnabled: Bool) -> TimeInterval? {
+        guard let duration, voiceOverEnabled else { return duration }
+        return max(duration, voiceOverMinimumDuration)
+    }
+
     /// Suspends for `duration` seconds.
     ///
     /// - Returns: `true` if the full duration elapsed and the toast should be dismissed;
