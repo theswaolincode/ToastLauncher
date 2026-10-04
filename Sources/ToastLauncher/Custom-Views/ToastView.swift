@@ -12,13 +12,16 @@ public struct ToastView: View {
     var title: String
     var symbolName: String
     var buttonTitle: String
+    var background: ToastBackgroundStyle
     var style: ToastViewStyle
     var onDismiss: @MainActor () -> Void
-    
-   public init(title: String? = nil, symbolName: String? = nil, buttonTitle: String? = nil, style: ToastViewStyle, onDismiss: @escaping @MainActor () -> Void) {
+
+    /// - Parameter background: Defaults to ``ToastBackgroundStyle/solid``, the original look.
+   public init(title: String? = nil, symbolName: String? = nil, buttonTitle: String? = nil, background: ToastBackgroundStyle = .solid, style: ToastViewStyle, onDismiss: @escaping @MainActor () -> Void) {
         self.title = title ?? "Hello, world!!"
         self.symbolName = symbolName ?? "globe"
         self.buttonTitle = buttonTitle ?? "Dismiss Me"
+        self.background = background
         self.style = style
         self.onDismiss = onDismiss
     }
@@ -49,10 +52,14 @@ public struct ToastView: View {
         }
         .padding(contentPadding)
         .frame(maxWidth: .infinity)
-        // Adapts to light/dark mode: white in light, elevated gray in dark.
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .toastBackground(background, cornerRadius: cornerRadius)
         .padding()
+    }
+
+    /// The solid style keeps its original 8pt corners; translucent styles use the
+    /// larger radius that suits Liquid Glass and materials.
+    private var cornerRadius: CGFloat {
+        background == .solid ? 8 : 16
     }
 
     private func autoDismiss() async {
@@ -86,6 +93,11 @@ struct ToastView_Previews: PreviewProvider {
             .environment(\.dynamicTypeSize, .accessibility3)
             .previewLayout(.sizeThatFits)
             .previewDisplayName("Accessibility text size")
+        ToastView(title: "Saved to your library", symbolName: "checkmark.circle.fill", background: .glass, style: .prominent, onDismiss: {})
+            .padding(.vertical, 40)
+            .background(LinearGradient(colors: [.orange, .purple], startPoint: .leading, endPoint: .trailing))
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("Glass background")
     }
 }
 
